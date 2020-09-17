@@ -21,7 +21,7 @@ class MyImg2Num:
         self.image_d = 1
         self.pixels = self.image_h * self.image_w * self.image_d
         self.learning_rate = 0.1
-        self.num_epochs = 4
+        self.num_epochs = 20
 
     def forward(self, img_batch):
         input_vector = img_batch.view(-1, self.pixels)
@@ -60,7 +60,7 @@ class MyImg2Num:
         train_data = train.train_data
         train_data = train.transform(train_data.numpy())
 
-        ###TRAINING
+        # TRAINING
         time_meas = torch.Tensor(self.num_epochs)
         acc_train = torch.Tensor(self.num_epochs)
         error_train = torch.Tensor(self.num_epochs)
@@ -115,11 +115,11 @@ class MyImg2Num:
             correct_batch = 0  # for each epoch
             correct_batch_test = 0
         correct_epoch_percent = [correct_epoch[i] / 600 for i in range(len(correct_epoch))]
-        print('Here is your time to train', time_meas)
-        print('Here is your train error', error_train)
-        print('Here is your accuracy', acc_train)
+        print('Here is your time to train:', time_meas)
+        print('Here is your train error:', error_train)
+        print('Here is your accuracy:', acc_train)
 
-        ### TESTING
+        # TESTING
         for batch_idx_test, (data_test, target_test) in enumerate(test_loader):
             batch_size_test = data_test.size(0)
 

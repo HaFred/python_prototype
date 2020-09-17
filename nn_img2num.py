@@ -30,7 +30,7 @@ class NnImg2Num:
     self.model = Net()
     self.learning_rate=0.1
     self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
-    self.numEpochs=200
+    self.numEpochs=50
 
 
 
@@ -44,14 +44,14 @@ class NnImg2Num:
 ### DATA LOADING:
     kwargs = {}
     train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,
+        datasets.MNIST('./data', train=True, download=True,
                        transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
         batch_size=64, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+        datasets.MNIST('./data', train=False, transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
@@ -83,7 +83,7 @@ class NnImg2Num:
                     100. * batch_idx / len(train_loader), loss.data[0]))
             '''
             pred= output.data.max(1, keepdim=True)[1] # get the index of the max sigmoid case
-            correct += pred.eq(target.view_as(pred)).sum()
+            correct += pred.eq(target.view_as(pred)).sum() # compute element wise equality between pred and target
         acc= correct*100/len(train_loader.dataset)
         print ('Accuracy and loss are', acc, loss.data[0])
         return [loss.data[0],acc]

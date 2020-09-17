@@ -110,7 +110,8 @@ class NeuralNetwork:
         # print('CE Loss is', CE_Loss)
         if loss_criterion == 'MSE':
             delta = cost_prime(act, target) * diff_sigmoid(act)
-        elif loss_criterion == 'CE':
+        elif loss_criterion == 'CE': # todo if CE used, the delta here works only activated by softmax
+            # forward sar
             delta = cost_prime(act, target)
 
         new_array = torch.Tensor(self.dE_dTheta[numlayers - 2].size())  # type: Tensor
