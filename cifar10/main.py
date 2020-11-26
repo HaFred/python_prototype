@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-
 import torchvision
 import torchvision.transforms as transforms
 
@@ -14,6 +13,8 @@ import argparse
 from cifar10.models import *
 from cifar10.utils import progress_bar
 
+from tqdm import tqdm
+import sys
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -51,6 +52,9 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 
 # Model
 print('==> Building model..')
+
+net = AlexNet()
+
 # net = VGG('VGG16')
 # net = ResNet18()
 # net = PreActResNet18()
@@ -59,7 +63,7 @@ print('==> Building model..')
 # net = ResNeXt29_2x64d()
 # net = ResNeXt29_32x4d()
 # net = MobileNet()
-net = MobileNetV2()
+# net = MobileNetV2()
 # net = DPN92()
 # net = ShuffleNetG2()
 # net = SENet18()
@@ -85,6 +89,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=70, gamma=0.1)
 
+
 # Training
 def train(epoch):
     print('\nEpoch: %d' % epoch)
@@ -104,9 +109,10 @@ def train(epoch):
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
-
+        # pbar.update(1)
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                     % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+
 
 def test(epoch):
     global best_acc
@@ -126,10 +132,10 @@ def test(epoch):
             correct += predicted.eq(targets).sum().item()
 
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                         % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
     # Save checkpoint.
-    acc = 100.*correct/total
+    acc = 100. * correct / total
     if acc > best_acc:
         print('Saving ' + net_name + ' ..')
         state = {
@@ -143,12 +149,14 @@ def test(epoch):
         best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+300):
-    # In PyTorch 1.1.0 and later,
-    # you should call them in the opposite order:
-    # `optimizer.step()` before `lr_scheduler.step()`
-    train(epoch)
-    test(epoch)
-    scheduler.step()  # lr times 0.1 every 100 steps
+with tqdm(total=len(range(start_epoch, start_epoch + 300)), file=sys.stdout, position=0) as pbar:
+    for epoch in range(start_epoch, start_epoch + 300):
+        # In PyTorch 1.1.0 and later,
+        # you should call them in the opposite order:
+        # `optimizer.step()` before `lr_scheduler.step()`
+        train(epoch)
+        test(epoch)
+        scheduler.step()  # lr times 0.1 every 100 steps
+        pbar.update(1)
 
 print("\nTesting best accuracy:", best_acc)

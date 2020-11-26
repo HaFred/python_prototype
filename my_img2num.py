@@ -21,14 +21,14 @@ class MyImg2Num:
         self.image_d = 1
         self.pixels = self.image_h * self.image_w * self.image_d
         self.learning_rate = 0.1
-        self.num_epochs = 20
+        self.num_epochs = 10
 
     def forward(self, img_batch):
         input_vector = img_batch.view(-1, self.pixels)
         output = self.model.forward(torch.t(input_vector))
         return torch.t(output)
 
-    def train(self):
+    def train(self): # for the entire training seq
         def one_hot_encoding(input_num):
             one_hot = torch.zeros(10, dtype=torch.short)
             one_hot[input_num] = 1
@@ -71,8 +71,11 @@ class MyImg2Num:
                 print("epoch = 1")
             print('training epoch ', epoch)
             for batch_idx, (data, target) in enumerate(train_loader):
+                # print("this is batch {:d} in {:d}" .format(batch_idx, epoch))
                 batch_size = data.size(0)
                 input_64x784 = data.view(batch_size, self.pixels)
+                # input_64x784 = data.view(batch_size, -1) # it should be the same as previous line, -1 means autoly
+                # find the number
                 target_64x10 = torch.Tensor(batch_size, self.output_size)
                 for i in range(batch_size): target_64x10[i, :] = one_hot_encoding(target[i])
                 out = self.forward(input_64x784)
@@ -100,7 +103,7 @@ class MyImg2Num:
                 # print(batch_size_test)
                 input_64x784 = data_test.view(batch_size_test, self.pixels)
                 target_64x10 = torch.Tensor(batch_size_test, self.output_size)
-                # print(target_64x10.shape)l
+                # print(target_64x10.shape)
                 for i in range(batch_size_test): target_64x10[i, :] = one_hot_encoding(target_test[i])
                 out_test = self.forward(input_64x784)
                 # print(out_test.shape)
@@ -133,9 +136,35 @@ class MyImg2Num:
             correct_batch_test = correct_batch_test + torch.sum(out_test.max(1)[1] == target_test)
             # print(correct_batch_test)
             loss_test.append(self.model.backward(torch.t(target_64x10)).mean())
+
+
         correct_epoch_test.append(correct_batch_test)
-        print('test accuracy is {:.1f}% and loss is {:f}'.format(correct_epoch_test[-1].to(dtype=torch.float) / 100,
-                                                                 loss_test[-1]))
+        print('Test accuracy is {:.1f}% and loss is {:f}'.format(
+            correct_epoch_test[-1].to(dtype=torch.float) / 100, loss_test[-1]))
+
+        ''' not working of this test_nn shows that if not using autograd or nn.module
+         the reshape as shown as above 'input_64x784' is requried'''
+
+        # def test_nn():
+        #     # self.model.eval()
+        #     test_loss = 0
+        #     correct = 0
+        #     for batch_idx_test, (data_test, target_test) in enumerate(test_loader):
+        #         target_onehot = torch.zeros(target_test.shape[0], 10)
+        #         for i in range(target_test.shape[0]): target_onehot[i, int(target_test[i])] = 1
+        #         # data, target_onehot = Variable(data_test, volatile=True), Variable(target_onehot)
+        #         output = self.model.forward(data_test)
+        #         # print('output shape is',output.data.shape)
+        #         # print('target shape is',output.data.shape)
+        #         test_loss += F.mse_loss(output, target_onehot, size_average=False).data_test[0]  # sum up batch loss
+        #         pred = output.data_test.max(1, keepdim=True)[1]  # get the index of the max sigmoid case
+        #         correct += pred.eq(target_test.view_as(pred)).cpu().sum()
+        #
+        #     test_loss /= len(test_loader.dataset)
+        #     print('\n(test_nn) Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        #         test_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
+        # # test_nn()
+
         print('end')
 
 # if __name__ == "__main__":
